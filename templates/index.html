@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Transmission Chatbot</title>
+    
+    <style>
+    body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, #0f172a, #1e3a8a);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    /* HEADER */
+    .header {
+        padding: 18px;
+        font-size: 22px;
+        font-weight: bold;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        background: rgba(30, 41, 59, 0.7);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        letter-spacing: 1px;
+    }
+
+    /* CHAT AREA */
+    .chat-container {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* SCROLLBAR */
+    .chat-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb {
+        background: #3b82f6;
+        border-radius: 10px;
+    }
+
+    /* MESSAGE BASE */
+    .message {
+        max-width: 70%;
+        padding: 14px 18px;
+        border-radius: 16px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    /* USER MESSAGE */
+    .user {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    }
+
+    /* BOT MESSAGE */
+    .bot {
+        background: rgba(51, 65, 85, 0.7);
+        backdrop-filter: blur(8px);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    /* INPUT AREA */
+    .input-container {
+        display: flex;
+        padding: 12px;
+        background: rgba(30, 41, 59, 0.8);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    input {
+        flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        border: none;
+        outline: none;
+        font-size: 15px;
+        background: #0f172a;
+        color: white;
+        transition: 0.2s;
+    }
+
+    input:focus {
+        box-shadow: 0 0 8px #3b82f6;
+    }
+
+    button {
+        margin-left: 10px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        transform: scale(1.05);
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    }
+
+    /* ANIMATION */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+</head>
+
+<body>
+
+   <div class="header">🤖 SARATHI - Offline Data Sync Assistant</div>
+
+    <div class="chat-container" id="chat"></div>
+
+    <div class="input-container">
+        <input type="text" id="message" placeholder="Ask something..." onkeypress="handleKey(event)">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        // ✅ Enter key support
+        function handleKey(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            let input = document.getElementById("message");
+            let chat = document.getElementById("chat");
+
+            let userText = input.value.trim();
+            if (!userText) return;
+
+            // Show user message
+            chat.innerHTML += `<div class="message user">${userText}</div>`;
+            input.value = "";
+
+            let lower = userText.toLowerCase();
+
+            // ✅ SMART GREETING DETECTION
+            if (lower.includes("hi") || lower.includes("hello") || lower.includes("hey")) {
+
+                let intro = `
+👋 Hello! I am SARATHI 🤖
+
+Your Offline Data Synchronization Assistant.
+
+You can ask me about:
+• Offline sync  
+• Sync conflicts  
+• Delta sync  
+• Apps like Google Docs, WhatsApp  
+• Errors & troubleshooting  
+
+Ask your question below 👇
+`;
+
+                chat.innerHTML += `<div class="message bot">${intro}</div>`;
+                chat.scrollTop = chat.scrollHeight;
+                return;
+            }
+
+            // Send to backend
+            let response = await fetch("/chat", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({message: userText})
+            });
+
+            let data = await response.json();
+
+            // ✅ Format response (bold + new lines)
+            let formatted = data.reply
+                .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+                .replace(/\n/g, "<br>");
+
+            chat.innerHTML += `<div class="message bot">${formatted}</div>`;
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+
+</body>
+</html>
